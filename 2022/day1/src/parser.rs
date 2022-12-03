@@ -1,4 +1,4 @@
-pub fn parse_input(input: &String) -> [usize; 2]
+pub fn part1_most_calories(input: &String) -> [usize; 2]
 {
     let mut total_max : usize = 0;
     let mut total_index : usize = 0;
@@ -26,11 +26,9 @@ pub fn parse_input(input: &String) -> [usize; 2]
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::parse_input;
+    use crate::parser::part1_most_calories;
 
-    #[test]
-    fn finds_most_calories() {
-        let actual = parse_input(&String::from("1000
+    const TEST_INPUT : &str = "1000
 2000
 3000
 
@@ -43,7 +41,11 @@ mod tests {
 8000
 9000
 
-10000"));
+10000";
+
+    #[test]
+    fn finds_most_calories() {
+        let actual = part1_most_calories(&String::from(TEST_INPUT));
         let expected : [usize; 2] = [4, 24000];
 
         println!("{:?} == {:?}", actual, expected);
