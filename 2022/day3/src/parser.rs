@@ -56,6 +56,46 @@ pub fn get_sum_priorities(input: &String, table: &PriorityTable) -> usize {
         .sum()
 }
 
+fn get_groups(input: &String) -> Vec<[&str;3]> {
+    let binding = get_rucksacks(input);
+    binding
+        .chunks(3)
+        .map(|x| {
+            let mut r = [""; 3];
+            for i in 0..x.len() {
+                r[i] = x[i]
+            }
+            r
+        })
+        .collect::<Vec<[&str;3]>>()
+}
+
+fn get_group_common(group: &[&str; 3]) -> String {
+    let mut result : Vec<char> = vec![];
+    for c1 in group[0].chars() {
+        if
+            group[1].contains(c1) &&
+            group[2].contains(c1) &&
+            !result.contains(&c1) {
+            result.push(c1);
+        }
+    }
+
+    result.iter().cloned().collect::<String>()
+}
+
+pub fn get_group_scores(input: &String, table: &PriorityTable) -> usize {
+    get_groups(input)
+        .iter()
+        .filter(|x| !x[0].is_empty())
+        .map(|x| -> usize {
+            let common = get_group_common(x);
+            let ch = *common.as_str().chars().collect::<Vec<char>>().first().unwrap();
+            table.get_priority(&ch)
+        })
+        .sum()
+}
+
 pub struct PriorityTable{
     table: Vec<char>
 }
@@ -166,6 +206,59 @@ CrZsJsPPZsGzwwsLwLmpwMDw";
         let binding = String::from(TEST_INPUT);
         let actual = get_sum_priorities(&binding, &PriorityTable::new());
         let expected = 157;
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_get_groups() {
+        let binding = String::from(TEST_INPUT);
+        let actual = get_groups(&binding);
+        let expected : Vec<[&str; 3]> = vec![
+            [
+                "vJrwpWtwJgWrhcsFMMfFFhFp",
+                "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+                "PmmdzqPrVvPwwTWBwg"
+            ],
+            [
+                "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
+                "ttgJtRGJQctTZtZT",
+                "CrZsJsPPZsGzwwsLwLmpwMDw"
+            ]
+        ];
+
+        println!("{:?} == {:?}", actual, expected);
+        assert_eq!(actual.len(), expected.len(), "Arrays don't have the same length");
+        assert!(actual.iter().zip(expected.iter()).all(|(a,b)| a == b), "Arrays are not equal");
+    }
+
+    #[test]
+    fn test_get_group_common() {
+        assert_eq!(
+            get_group_common(
+                &[
+                    "vJrwpWtwJgWrhcsFMMfFFhFp",
+                    "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+                    "PmmdzqPrVvPwwTWBwg"
+                ]
+            ), "r"
+        );
+        assert_eq!(
+            get_group_common(
+                &[
+                    "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
+                    "ttgJtRGJQctTZtZT",
+                    "CrZsJsPPZsGzwwsLwLmpwMDw"
+                ]
+            ), "Z"
+        );
+    }
+
+    #[test]
+    fn test_get_group_scores() {
+        let binding = String::from(TEST_INPUT);
+        let actual = get_group_scores(&binding, &PriorityTable::new());
+        let expected = 70;
 
         assert_eq!(actual, expected);
     }
