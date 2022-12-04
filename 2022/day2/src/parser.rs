@@ -6,7 +6,7 @@ pub struct Parser
 }
 
 impl Parser {
-    pub fn new(input: String) -> Self
+    pub fn from_part1(input: &String) -> Self
     {
         let mut moves : Vec<Move> = vec![];
         let lines = input.split("\n");
@@ -18,6 +18,48 @@ impl Parser {
                 continue;
             }
             moves.push(Move::from_string(sides[0], sides[1]));
+        }
+
+        Parser {
+            moves
+        }
+    }
+
+    pub fn from_part2(input: &String) -> Self
+    {
+        let mut moves : Vec<Move> = vec![];
+        let lines = input.split("\n");
+
+        for movement in lines {
+            let sides : Vec<&str> = movement.split(" ").collect::<Vec<&str>>();
+            if sides.len() != 2 {
+                println!("Line: {:?} doesn't have 2 columns!", movement);
+                continue;
+            }
+
+            let m : Move = match sides[0] {
+                "A" => match sides[1] {
+                    "X" => Move::new(Box::new(Rock::new()), Box::new(Scissors::new())),
+                    "Y" => Move::new(Box::new(Rock::new()), Box::new(Rock::new())),
+                    "Z" => Move::new(Box::new(Rock::new()), Box::new(Paper::new())),
+                    _ => panic!("Unknown rock move!"),
+                },
+                "B" => match sides[1] {
+                    "X" => Move::new(Box::new(Paper::new()), Box::new(Rock::new())),
+                    "Y" => Move::new(Box::new(Paper::new()), Box::new(Paper::new())),
+                    "Z" => Move::new(Box::new(Paper::new()), Box::new(Scissors::new())),
+                    _ => panic!("Unknown paper move!"),
+                },
+                "C" => match sides[1] {
+                    "X" => Move::new(Box::new(Scissors::new()), Box::new(Paper::new())),
+                    "Y" => Move::new(Box::new(Scissors::new()), Box::new(Scissors::new())),
+                    "Z" => Move::new(Box::new(Scissors::new()), Box::new(Rock::new())),
+                    _ => panic!("Unknown scissors move!"),
+                },
+                _ => panic!("Unknown opponent move!"),
+            };
+
+            moves.push(m);
         }
 
         Parser {
@@ -166,7 +208,7 @@ C Z";
 
     #[test]
     fn test_constructs_moves() {
-        let parser = Parser::new(String::from(TEST_INPUT));
+        let parser = Parser::from_part1(&String::from(TEST_INPUT));
         let actual : &Vec<Move> = parser.get_moves();
         let expected : Vec<Move> = vec![
             Move::new(Box::new(Rock::new()), Box::new(Paper::new())),
@@ -183,7 +225,7 @@ C Z";
 
     #[test]
     fn test_move_scores() {
-        let parser = Parser::new(String::from(TEST_INPUT));
+        let parser = Parser::from_part1(&String::from(TEST_INPUT));
         let actual : Vec<usize> = parser.get_move_scores();
         let expected : Vec<usize> = vec![2, 6, 1, 0, 3, 3];
 
@@ -193,10 +235,23 @@ C Z";
 
     #[test]
     fn test_score_total() {
-        let parser = Parser::new(String::from(TEST_INPUT));
+        let parser = Parser::from_part1(&String::from(TEST_INPUT));
         let actual : usize = parser.get_score_total();
         let expected : usize = 15;
 
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_part2_moves() {
+        let parser = Parser::from_part2(&String::from(TEST_INPUT));
+        let actual : Vec<usize> = parser.get_move_scores();
+        let expected : Vec<usize> = vec![1, 3, 1, 0, 1, 6];
+
+        println!("ACTUAL: {:?}", actual);
+        println!("EXP: {:?}", expected);
+
+        assert_eq!(actual.len(), expected.len(), "Arrays don't have the same length");
+        assert!(actual.iter().zip(expected.iter()).all(|(a,b)| a == b), "Arrays are not equal");
     }
 }
