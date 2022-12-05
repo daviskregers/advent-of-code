@@ -44,6 +44,30 @@ fn overlaps(v1 : &Vec<usize>, v2 : &Vec<usize>) -> bool
     return true
 }
 
+pub fn get_partial_overlap(input: Vec<[Vec<usize>; 2]>) -> usize
+{
+    input
+        .iter()
+        .map(|x| {
+            partial_overlap(x.get(0).unwrap(), x.get(1).unwrap()) ||
+            partial_overlap(x.get(1).unwrap(), x.get(0).unwrap())
+        })
+        .filter(|x| *x == true)
+        .collect::<Vec<bool>>()
+        .len()
+}
+
+fn partial_overlap(v1 : &Vec<usize>, v2 : &Vec<usize>) -> bool
+{
+    for i in v1 {
+        if v2.contains(i) {
+            return true
+        }
+    }
+    return false
+}
+
+
 #[cfg(test)]
 mod tests {
     use crate::parser::*;
@@ -86,6 +110,22 @@ mod tests {
         ];
         let actual = get_overlap(input);
         let expected : usize = 2;
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_get_total_overlap() {
+        let input : Vec<[Vec<usize>; 2]> = vec![
+            [vec![2,3,4], vec![6,7,8]],
+            [vec![2,3], vec![4,5]],
+            [vec![5,6,7], vec![7,8,9]],
+            [vec![2,3,4,5,6,7,8], vec![3,4,5,6,7]],
+            [vec![6], vec![4,5,6]],
+            [vec![2,3,4,5,6], vec![4,5,6,7,8]]
+        ];
+        let actual = get_partial_overlap(input);
+        let expected : usize = 4;
 
         assert_eq!(actual, expected);
     }
