@@ -3,12 +3,13 @@ use regex::Regex;
 
 pub fn parse_stacks(input: &str) -> StackSet
 {
-    let mut result : Vec<Vec<String>> = vec![];
+    let mut stacks : Vec<Vec<String>> = vec![];
+    let mut commands : Vec<Command> = vec![];
     let lines = input.split("\n").collect::<Vec<&str>>();
     let count = get_stack_count(lines.clone());
 
     for _ in 0..count.num_stacks {
-        result.push(vec![]);
+        stacks.push(vec![]);
     }
 
     let mut current_line : String;
@@ -18,21 +19,45 @@ pub fn parse_stacks(input: &str) -> StackSet
         for s in 0..count.num_stacks {
             let item : String = chars[s].to_string();
             if item != "-" {
-                result[s].push(item);
+                stacks[s].push(item);
             }
         }
     }
 
-    StackSet::new(result)
+    for line in (count.linenr + 1)..lines.len() {
+        let ln = lines[line];
+        if ln.is_empty() {
+            continue;
+        }
+        let command = Regex::new(r"move (\d+) from (\d+) to (\d+)").unwrap();
+        let replaced: String = command
+            .replace_all(ln, "$1 $2 $3")
+            .to_string();
+        let after = replaced
+            .split(" ")
+            .map(|x| FromStr::from_str(x).expect("to be parsable usize"))
+            .collect::<Vec<usize>>();
+        commands.push(Command {count: after[0], from: after[1], to: after[2]});
+    }
+
+    StackSet::new(stacks, commands)
 }
 
 #[derive(Debug, PartialEq)]
 pub struct StackSet {
-    stacks: Vec<Vec<String>>
+    stacks: Vec<Vec<String>>,
+    commands: Vec<Command>
 }
 
 impl StackSet {
-    fn new(stacks: Vec<Vec<String>>) -> Self { Self { stacks } }
+    fn new(stacks: Vec<Vec<String>>, commands: Vec<Command>) -> Self { Self { stacks, commands} }
+}
+
+#[derive(Debug, PartialEq)]
+struct Command {
+    count: usize,
+    from: usize,
+    to: usize
 }
 
 #[derive(Debug)]
@@ -89,6 +114,11 @@ move 1 from 1 to 2
             vec![String::from("Z"), String::from("N")],
             vec![String::from("M"), String::from("C"), String::from("D")],
             vec![String::from("P")],
+        ], vec![
+            Command { count: 1, from: 2, to: 1},
+            Command { count: 3, from: 1, to: 3},
+            Command { count: 2, from: 2, to: 1},
+            Command { count: 1, from: 1, to: 2}
         ]);
 
         assert_eq!(actual, expected);
