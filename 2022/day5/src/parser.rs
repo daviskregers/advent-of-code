@@ -43,7 +43,7 @@ pub fn parse_stacks(input: &str) -> StackSet
     StackSet::new(stacks, commands)
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct StackSet {
     stacks: Vec<Vec<String>>,
     commands: Vec<Command>
@@ -51,9 +51,27 @@ pub struct StackSet {
 
 impl StackSet {
     fn new(stacks: Vec<Vec<String>>, commands: Vec<Command>) -> Self { Self { stacks, commands} }
+    pub fn execute(&mut self) -> bool {
+        if self.commands.is_empty() {
+            return false
+        }
+        let command = self.commands[0];
+        self.commands.remove(0);
+        println!("COMMAND: {:?}", command);
+
+        for i in 0..command.count {
+            let item = self.stacks[command.from-1].pop();
+            match item {
+                Some(itm) => self.stacks[command.to-1].push(itm),
+                _ => continue
+            }
+        }
+
+        true
+    }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 struct Command {
     count: usize,
     from: usize,
@@ -122,5 +140,47 @@ move 1 from 1 to 2
         ]);
 
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_execute_command() {
+        let initial : StackSet = StackSet::new(vec![
+            vec![String::from("Z"), String::from("N")],
+            vec![String::from("M"), String::from("C"), String::from("D")],
+            vec![String::from("P")],
+        ], vec![
+            Command { count: 1, from: 2, to: 1},
+            Command { count: 3, from: 1, to: 3},
+            Command { count: 2, from: 2, to: 1},
+            Command { count: 1, from: 1, to: 2}
+        ]);
+        let mut actual = initial.clone();
+            actual.execute();
+        let expected : StackSet = StackSet::new(vec![
+            vec![String::from("Z"), String::from("N"), String::from("D")],
+            vec![String::from("M"), String::from("C")],
+            vec![String::from("P")],
+        ], vec![
+            Command { count: 3, from: 1, to: 3},
+            Command { count: 2, from: 2, to: 1},
+            Command { count: 1, from: 1, to: 2}
+        ]);
+
+        assert_eq!(actual, expected);
+
+        actual.execute();
+        actual.execute();
+        actual.execute();
+
+        let finished : StackSet = StackSet::new(vec![
+            vec![String::from("C")],
+            vec![String::from("M")],
+            vec![String::from("P"), String::from("D"), String::from("N"), String::from("Z")],
+        ], vec![]);
+
+        assert_eq!(actual, finished);
+
+        actual.execute();
+        assert_eq!(actual, finished);
     }
 }
