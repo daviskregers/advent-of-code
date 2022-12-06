@@ -1,22 +1,38 @@
 use core::str::FromStr;
 use regex::Regex;
 
-fn parse_stacks(input: &str) -> Vec<Vec<&str>>
+pub fn parse_stacks(input: &str) -> StackSet
 {
-    let mut result : Vec<Vec<&str>> = vec![];
+    let mut result : Vec<Vec<String>> = vec![];
     let lines = input.split("\n").collect::<Vec<&str>>();
     let count = get_stack_count(lines.clone());
 
-    // USE THIS:
-    // regex replace "   " to -, [\w] to $1, parse to Vec
-    let re = Regex::new(r"(?P<y>\d{4})-(?P<m>\d{2})-(?P<d>\d{2})").unwrap();
-    let before = "2012-03-14, 2013-01-01 and 2014-07-05";
-    let after = re.replace_all(before, "$m/$d/$y");
-    assert_eq!(after, "03/14/2012, 01/01/2013 and 07/05/2014");
-    // place each column into specific stack
-    // remove -
+    for _ in 0..count.num_stacks {
+        result.push(vec![]);
+    }
 
-    result
+    let mut current_line : String;
+    for line in (0..count.linenr).rev() {
+        current_line = cleanup_string(lines[line]);
+        let chars = current_line.chars().collect::<Vec<char>>();
+        for s in 0..count.num_stacks {
+            let item : String = chars[s].to_string();
+            if item != "-" {
+                result[s].push(item);
+            }
+        }
+    }
+
+    StackSet::new(result)
+}
+
+#[derive(Debug, PartialEq)]
+pub struct StackSet {
+    stacks: Vec<Vec<String>>
+}
+
+impl StackSet {
+    fn new(stacks: Vec<Vec<String>>) -> Self { Self { stacks } }
 }
 
 #[derive(Debug)]
@@ -39,6 +55,16 @@ fn get_stack_count(lines: Vec<&str>) -> StackSize
     panic!("Couldn't find stack size declaration!");
 }
 
+fn cleanup_string(input : &str) -> String
+{
+    let items = Regex::new(r"\[(\w)\]").unwrap();
+    let empty = Regex::new(r"   ").unwrap();
+    let non_breaking_whitespace = Regex::new(r" ").unwrap();
+    let mut after = items.replace_all(input, "$1").to_string();
+    after = empty.replace_all(after.as_str(), "-").to_string();
+    non_breaking_whitespace.replace_all(after.as_str(), "").to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use crate::parser::*;
@@ -59,14 +85,12 @@ move 1 from 1 to 2
         let binding = String::from(TEST_INPUT);
         let actual = parse_stacks(&binding);
 
-        let mut expected : Vec<Vec<&str>> = vec![
-            vec!["Z", "N"],
-            vec!["M", "C", "D"],
-            vec!["P"],
-        ];
+        let expected : StackSet = StackSet::new(vec![
+            vec![String::from("Z"), String::from("N")],
+            vec![String::from("M"), String::from("C"), String::from("D")],
+            vec![String::from("P")],
+        ]);
 
-        println!("{:?} == {:?}", actual, expected);
-        assert_eq!(actual.len(), expected.len(), "Arrays don't have the same length");
-        assert!(actual.iter().zip(expected.iter()).all(|(a,b)| a == b), "Arrays are not equal");
+        assert_eq!(actual, expected);
     }
 }
